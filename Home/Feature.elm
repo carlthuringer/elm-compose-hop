@@ -1,31 +1,50 @@
 module Home.Feature where
 
-import StartApp exposing (App, start)
+import StartApp
 import Effects
 import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Debug exposing (watch)
 
-type Action = NoOp
+import Common.Model exposing (Model, initialModel)
+import Library.Util exposing (broadcast)
+
+type Action
+  = Update Model
+  | NoOp
 
 type alias Config =
   { inputs : List (Signal Action)
-  , outputs : { }
+  , outputs : { onUpdatedMessage : List (Signal.Address Model) }
   }
 
-type alias Model = { }
+type alias HomeFeature = StartApp.App Model
 
-type alias HomeFeature = App Model
+intoMessage : Model -> String -> Model
+intoMessage model message = { model | message = message }
 
-initialModel = ({ }, Effects.none)
+update services action model =
+  case action of
+    Update model -> (model, services.signalUpdate model NoOp)
+    NoOp -> (model, Effects.none)
 
-update action model = (model, Effects.none)
-
-view address model = h1 [] [ text "Home Page" ]
+view address model = div []
+  [ h1 [] [ text "Home Page" ]
+  , label [ for "message" ] [ text "Message: " ]
+  , input
+    [ name "message"
+    , value model.message
+    , on "change" targetValue (\msg -> Signal.message address (Update (intoMessage model msg)))
+    ] []
+  , span [] [ em [] [ text model.message ]]
+  ]
 
 createHomeFeature : Config -> HomeFeature
 createHomeFeature config =
-  start
-    { init = initialModel
-    , update = update
+  StartApp.start
+    { init = (initialModel, Effects.none)
+    , update = update { signalUpdate = broadcast config.outputs.onUpdatedMessage }
     , view = view
     , inputs = config.inputs
     }
