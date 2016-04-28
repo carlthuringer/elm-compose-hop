@@ -29,7 +29,7 @@ createAboutFeature : Config -> AboutFeature
 createAboutFeature config =
   start
     { init = (initialModel, Effects.none)
-    , update = watch "updating"
+    , update = update
     , view = view
     , inputs = config.inputs
     }
