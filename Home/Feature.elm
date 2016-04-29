@@ -1,7 +1,7 @@
 module Home.Feature where
 
 import StartApp
-import Effects
+import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -21,9 +21,13 @@ type alias Config =
 
 type alias HomeFeature = StartApp.App Model
 
+type alias Services =
+  { signalUpdate : Model -> Action -> Effects Action }
+
 intoMessage : Model -> String -> Model
 intoMessage model message = { model | message = message }
 
+update : Services -> Action -> Model -> (Model, Effects Action)
 update services action model =
   case action of
     Update model -> (model, services.signalUpdate model NoOp)
